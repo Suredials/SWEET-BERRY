@@ -1,4 +1,8 @@
 /* A clear investigation canvas. Pixel lettering belongs to the logo only. */
+body .page-heading .page-actions .button{width:208px;min-height:44px;height:44px;padding:10px 15px;font-size:13px;font-weight:600;line-height:20px;border-width:1px;box-sizing:border-box}
+.page-heading .page-actions .button.primary,.page-heading .page-actions .button.secondary{box-shadow:0 2px 0 #0002}
+.overview-grid>.intent-panel,.overview-grid>.topology-panel{align-self:stretch;display:flex;flex-direction:column}
+.overview-grid>.intent-panel #soc-n2-preview{margin-top:auto}
 .page-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .new-test-copy{padding:22px 26px;max-width:650px;font-size:14px;line-height:1.9}.new-test-copy p{margin:0 0 18px}
 .new-test-status{padding:15px 18px;margin-bottom:20px;border:1px solid #76a447;background:#edf7e4;color:#426b26;font-size:13px;line-height:1.8;overflow-wrap:anywhere}
