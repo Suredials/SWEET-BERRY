@@ -1,0 +1,1 @@
+[{"action":"portscan"},{"action":"ldap_users"},{"action":"request_asrep","target":"svc_backup"}]

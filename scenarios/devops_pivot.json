@@ -1,0 +1,11 @@
+[
+ {"action":"web_visit","target_host":"intranet01"},
+ {"action":"web_directory","target_host":"intranet01","metadata":{"evidence":"confirmed"}},
+ {"action":"web_document_read","target_host":"intranet01","target":"it-runbook.md","metadata":{"evidence":"confirmed"}},
+ {"action":"repo_discovery","target_host":"git01","target":"backup-scripts"},
+ {"action":"repo_read","target_host":"git01","target":"backup-scripts","metadata":{"evidence":"confirmed"}},
+ {"action":"cloud_buckets","target_host":"cloud01"},
+ {"action":"cloud_objects","target_host":"cloud01"},
+ {"action":"cloud_inventory_read","target_host":"cloud01","target":"inventory.csv","metadata":{"evidence":"confirmed"}},
+ {"action":"secret_access","target_host":"cloud01","target":"cloud_credentials.txt","metadata":{"evidence":"confirmed"}}
+]

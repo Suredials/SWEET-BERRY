@@ -1,0 +1,389 @@
+name: sweetberry
+x-target-logging: &target-logging
+  driver: json-file
+  options:
+    max-size: "16m"
+    max-file: "4"
+services:
+  dns:
+    build: ./infra/dns
+    logging: *target-logging
+    hostname: dns-sink
+    networks:
+      frontend:
+        ipv4_address: 172.30.67.53
+      targets:
+        ipv4_address: 172.30.66.53
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    sysctls:
+      net.ipv4.ip_unprivileged_port_start: '0'
+    pids_limit: 32
+    mem_limit: 96m
+    restart: 'no'
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.settimeout(2); s.sendto(bytes.fromhex('12340100000100000000000005676974303104636f7270056c6f63616c0000010001'),('127.0.0.1',53)); assert len(s.recv(512))>12"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+  guard:
+    dns: [172.30.67.53]
+    logging: *target-logging
+    build: ./infra/guard
+    hostname: llmguard
+    environment:
+      HF_HUB_OFFLINE: '1'
+    volumes:
+      - guard-cache:/home/guard/.cache
+    networks:
+      frontend:
+        ipv4_address: 172.30.67.71
+    restart: 'no'
+    pids_limit: 100
+    mem_limit: 2g
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+  dc:
+    logging: *target-logging
+    build: ./infra/dc
+    hostname: dc01
+    dns:
+      - 127.0.0.1
+    environment:
+      DOMAIN_PASSWORD: ${DOMAIN_PASSWORD:?run scripts/configure.py}
+      BAIT_PASSWORD: ${BAIT_PASSWORD:?run scripts/configure.py}
+      ADVERTISE_IP: ${DC_IP:-172.27.66.10}
+    ports:
+      - '${DC_IP:-172.27.66.10}:53:53/tcp'
+      - '${DC_IP:-172.27.66.10}:1053:53/tcp'
+      - '${DC_IP:-172.27.66.10}:53:53/udp'
+      - '${DC_IP:-172.27.66.10}:1053:53/udp'
+      - '${DC_IP:-172.27.66.10}:88:88/tcp'
+      - '${DC_IP:-172.27.66.10}:88:88/udp'
+      - '${DC_IP:-172.27.66.10}:135:135'
+      - '${DC_IP:-172.27.66.10}:139:139'
+      - '${DC_IP:-172.27.66.10}:389:389'
+      - '${DC_IP:-172.27.66.10}:445:445'
+      - '${DC_IP:-172.27.66.10}:464:464/tcp'
+      - '${DC_IP:-172.27.66.10}:464:464/udp'
+      - '${DC_IP:-172.27.66.10}:636:636'
+      - '${DC_IP:-172.27.66.10}:3268:3268'
+      - '${DC_IP:-172.27.66.10}:3269:3269'
+      - '${DC_IP:-172.27.66.10}:50000-50010:50000-50010'
+    volumes:
+      - dc-data:/var/lib/samba
+      - dc-config:/etc/samba
+      - dc-shares:/srv/shares
+      - ./runtime/dc:/var/log/samba
+      - ./infra/company.json:/opt/company.json:ro
+    networks:
+      frontend:
+        ipv4_address: 172.30.67.10
+    restart: 'no'
+    pids_limit: 200
+    mem_limit: 1g
+    healthcheck:
+      test: ['CMD', 'python3', '-c', "import socket; [socket.create_connection(('127.0.0.1',p),2).close() for p in (53,88,389,445)]"]
+      interval: 20s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+  linux:
+    dns: [172.30.66.53]
+    logging: *target-logging
+    build: ./infra/linux
+    hostname: backup01
+    volumes:
+      - linux-data:/srv/corp
+      - ./runtime/linux:/var/log/integrity
+    networks:
+      targets:
+        ipv4_address: 172.30.66.20
+    restart: 'no'
+    pids_limit: 100
+    mem_limit: 256m
+    healthcheck:
+      test: ['CMD', 'python3', '-c', "assert any(r.split()[1].endswith(':0016') and r.split()[3]=='0A' for r in open('/proc/net/tcp').readlines()[1:])"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+  cowrie:
+    dns: [172.30.67.53]
+    logging: *target-logging
+    image: cowrie/cowrie@sha256:baf351038db967704dfa39f7ce860e8875c9456cdab72a9d3257c4247211050d
+    hostname: ssh-gateway
+    depends_on:
+      - linux
+    ports:
+      - '${COWRIE_IP:-172.27.66.20}:22:2222'
+    volumes:
+      - ./infra/cowrie/cowrie.cfg:/cowrie/cowrie-git/etc/cowrie.cfg:ro
+      - ./infra/cowrie/userdb.txt:/cowrie/cowrie-git/etc/userdb.txt:ro
+      - ./runtime/cowrie:/cowrie/cowrie-git/var
+    networks:
+      - targets
+      - frontend
+    restart: 'no'
+    pids_limit: 100
+    mem_limit: 384m
+    healthcheck:
+      test: ['CMD', 'python3', '-c', "assert any(r.split()[1].endswith(':08AE') and r.split()[3]=='0A' for r in open('/proc/net/tcp').readlines()[1:])"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+  portal:
+    dns: [172.30.67.53]
+    logging: *target-logging
+    build: ./infra/lures
+    hostname: intranet01
+    environment:
+      LURE_ROLE: portal
+      FORGE_URL: http://${FORGE_IP:-172.27.66.40}:3000
+    ports:
+      - '${PORTAL_IP:-172.27.66.30}:8088:8080'
+    volumes:
+      - portal-data:/srv/data
+      - ./runtime/portal:/var/log/lure
+      - ./infra/company.json:/opt/company.json:ro
+    networks:
+      frontend:
+        ipv4_address: 172.30.67.30
+    restart: 'no'
+    pids_limit: 64
+    mem_limit: 128m
+    healthcheck:
+      test: ['CMD', 'python3', '-c', "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health',timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+  forge:
+    dns: [172.30.67.53]
+    logging: *target-logging
+    image: docker.gitea.com/gitea:28.2.0-rootless
+    hostname: git01
+    environment:
+      GITEA__security__INSTALL_LOCK: 'true'
+      GITEA__database__DB_TYPE: sqlite3
+      GITEA__database__PATH: /var/lib/gitea/data/gitea.db
+      GITEA__server__ROOT_URL: http://172.27.66.40:3000/
+      GITEA__server__DOMAIN: 172.27.66.40
+      GITEA__server__DISABLE_SSH: 'true'
+      GITEA__server__OFFLINE_MODE: 'true'
+      GITEA__service__DISABLE_REGISTRATION: 'true'
+      GITEA__actions__ENABLED: 'false'
+      GITEA__log__MODE: console
+      GITEA__log__LEVEL: Info
+    volumes:
+      - gitea-data:/var/lib/gitea
+      - gitea-config:/etc/gitea
+      - forge-data:/srv/legacy:ro
+    networks:
+      frontend:
+        ipv4_address: 172.30.67.40
+    restart: 'no'
+    pids_limit: 200
+    mem_limit: 512m
+    security_opt: ['no-new-privileges:true']
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/api/healthz']
+      interval: 20s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+  forge-edge:
+    dns: [172.30.67.53]
+    logging: *target-logging
+    build: ./infra/edge
+    environment:
+      EDGE_ROLE: forge
+      UPSTREAM: http://172.30.67.40:3000
+    ports: ['${FORGE_IP:-172.27.66.40}:3000:8080']
+    volumes: ['./runtime/forge:/var/log/lure']
+    networks:
+      frontend:
+        ipv4_address: 172.30.67.42
+    pids_limit: 64
+    mem_limit: 128m
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    restart: 'no'
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+  cloud:
+    dns: [172.30.67.53]
+    logging: *target-logging
+    build: ./infra/moto
+    hostname: moto01
+    volumes: ['cloud-data:/srv/data']
+    networks:
+      frontend:
+        ipv4_address: 172.30.67.51
+    pids_limit: 100
+    mem_limit: 512m
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    restart: 'no'
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/')"]
+      interval: 20s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+  cloud-edge:
+    dns: [172.30.67.53]
+    logging: *target-logging
+    build: ./infra/edge
+    environment:
+      EDGE_ROLE: cloud
+      UPSTREAM: http://172.30.67.51:5000
+    ports: ['${CLOUD_IP:-172.27.66.50}:4566:8080', '${CLOUD_IP:-172.27.66.50}:9080:8080']
+    volumes: ['./runtime/cloud:/var/log/lure']
+    networks:
+      frontend:
+        ipv4_address: 172.30.67.50
+    pids_limit: 64
+    mem_limit: 128m
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    restart: 'no'
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+  chatbot:
+    dns: [172.30.67.53]
+    logging: *target-logging
+    build: ./infra/edge
+    hostname: assistant01
+    environment:
+      EDGE_ROLE: chatbot
+      UPSTREAM: http://172.30.67.1:8001
+      CHAT_BROKER_TOKEN: ${CHAT_BROKER_TOKEN:?run scripts/configure.py}
+    ports: ['172.27.66.70:80:8080']
+    volumes: ['./runtime/chatbot:/var/log/lure']
+    networks:
+      frontend:
+        ipv4_address: 172.30.67.70
+    pids_limit: 64
+    mem_limit: 128m
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    restart: 'no'
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+  webtrap:
+    dns: [172.30.67.53]
+    logging: *target-logging
+    build: ./infra/webtrap
+    hostname: support01
+    volumes: ['webtrap-uploads:/srv/app/uploads']
+    read_only: true
+    tmpfs: ['/tmp:size=64m,mode=1777']
+    networks:
+      frontend:
+        ipv4_address: 172.30.67.80
+    pids_limit: 16
+    cpus: 0.75
+    mem_limit: 256m
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    restart: 'no'
+    healthcheck:
+      test: ['CMD', 'php', '-r', "exit(strpos(file_get_contents('/proc/net/tcp'), ':1F90')===false?1:0);"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+  webedge:
+    dns: [172.30.67.53]
+    logging: *target-logging
+    build: ./infra/edge
+    environment:
+      EDGE_ROLE: webedge
+      UPSTREAM: http://172.30.67.80:8080
+    ports: ['172.27.66.80:80:8080']
+    volumes: ['./runtime/webedge:/var/log/lure']
+    networks:
+      frontend:
+        ipv4_address: 172.30.67.81
+    pids_limit: 64
+    mem_limit: 128m
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    restart: 'no'
+    healthcheck:
+      test: ['CMD', 'python', '-c', "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+  canary:
+    dns: [172.30.67.53]
+    logging: *target-logging
+    image: thinkst/opencanary@sha256:8d44d50a23e8be18bad7e6a024845c6f5608ddd24e159de38f473026877e1f36
+    hostname: services01
+    ports:
+      - '${CANARY_IP:-172.27.66.60}:2121:2121'
+      - '${CANARY_IP:-172.27.66.60}:1433:1433'
+      - '${CANARY_IP:-172.27.66.60}:3306:3306'
+      - '${CANARY_IP:-172.27.66.60}:3389:3389'
+      - '${CANARY_IP:-172.27.66.60}:6379:6379'
+      - '${CANARY_IP:-172.27.66.60}:27017:27017'
+    volumes:
+      - ./infra/canary/opencanary.conf:/etc/opencanaryd/opencanary.conf:ro
+      - ./runtime/canary:/var/log/canary
+    tmpfs:
+      - /run
+    networks:
+      frontend:
+        ipv4_address: 172.30.67.60
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETUID
+      - SETGID
+      - DAC_OVERRIDE
+    restart: 'no'
+    pids_limit: 100
+    mem_limit: 256m
+    healthcheck:
+      test: ['CMD', 'python3', '-c', "import socket; [socket.create_connection(('127.0.0.1',p),2).close() for p in (2121,1433,3306,3389,6379,27017)]"]
+      interval: 20s
+      timeout: 15s
+      start_period: 30s
+      retries: 3
+networks:
+  frontend:
+    ipam:
+      config:
+        - subnet: 172.30.67.0/24
+  targets:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.30.66.0/24
+volumes:
+  webtrap-uploads:
+  gitea-data:
+  gitea-config:
+  guard-cache:
+    external: true
+    name: sweetberry_guard-cache
+  dc-data:
+  dc-config:
+  dc-shares:
+  linux-data:
+  portal-data:
+  forge-data:
+  cloud-data:

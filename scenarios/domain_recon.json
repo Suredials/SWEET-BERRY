@@ -1,0 +1,8 @@
+[
+ {"action":"portscan","target_host":"dc01"},
+ {"action":"ldap_users","target_host":"dc01"},
+ {"action":"ldap_groups","target_host":"dc01"},
+ {"action":"ldap_computers","target_host":"dc01"},
+ {"action":"enumerate_shares","target_host":"dc01"},
+ {"action":"public_file_access","target_host":"dc01","target":"Finance$/quarterly-report.csv","metadata":{"evidence":"confirmed"}}
+]

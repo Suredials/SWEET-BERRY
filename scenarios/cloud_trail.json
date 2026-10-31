@@ -1,0 +1,8 @@
+[
+ {"action":"web_visit","target_host":"cloud01"},
+ {"action":"cloud_buckets","target_host":"cloud01"},
+ {"action":"cloud_objects","target_host":"cloud01"},
+ {"action":"cloud_inventory_read","target_host":"cloud01","target":"inventory.csv","metadata":{"evidence":"confirmed"}},
+ {"action":"cloud_object_read","target_host":"cloud01","target":"backup-index.json","metadata":{"evidence":"confirmed"}},
+ {"action":"secret_access","target_host":"cloud01","target":"cloud_credentials.txt","metadata":{"evidence":"confirmed"}}
+]

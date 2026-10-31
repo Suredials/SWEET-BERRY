@@ -1,0 +1,9 @@
+[
+ {"action":"portscan","target_host":"services01"},
+ {"action":"decoy_protocol_contact","target_host":"services01","target":"FTP"},
+ {"action":"decoy_protocol_contact","target_host":"services01","target":"MySQL"},
+ {"action":"decoy_protocol_contact","target_host":"services01","target":"Redis"},
+ {"action":"web_visit","target_host":"intranet01"},
+ {"action":"ldap_users","target_host":"dc01"},
+ {"action":"network_discovery","target_host":"backup01"}
+]

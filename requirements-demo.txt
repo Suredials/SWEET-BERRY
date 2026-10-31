@@ -1,0 +1,5 @@
+# Optional clients for running demonstrations from another machine.
+paramiko==5.1.0
+ldap3==2.9.1
+dnspython==2.9.1
+smbprotocol==1.17.0

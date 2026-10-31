@@ -1,0 +1,8 @@
+[
+ {"action":"auth_failure","target_host":"dc01","target":"lab_user_1","metadata":{"evidence":"attempted"}},
+ {"action":"auth_failure","target_host":"dc01","target":"lab_user_2","metadata":{"evidence":"attempted"}},
+ {"action":"auth_failure","target_host":"dc01","target":"lab_user_3","metadata":{"evidence":"attempted"}},
+ {"action":"auth_failure","target_host":"dc01","target":"lab_user_4","metadata":{"evidence":"attempted"}},
+ {"action":"auth_failure","target_host":"dc01","target":"lab_user_5","metadata":{"evidence":"attempted"}},
+ {"action":"auth_failure","target_host":"dc01","target":"lab_user_6","metadata":{"evidence":"attempted"}}
+]

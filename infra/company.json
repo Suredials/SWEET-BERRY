@@ -1,0 +1,13 @@
+{
+  "name": "Northstar Systems",
+  "domain": "CORP.LOCAL",
+  "employees": [
+    {"username": "mrivera", "name": "Maya Rivera", "department": "Engineering"},
+    {"username": "jchen", "name": "Jordan Chen", "department": "Finance"},
+    {"username": "apatel", "name": "Alex Patel", "department": "IT Operations"}
+  ],
+  "groups": ["Engineering", "Finance", "IT-Operations", "Backup-Operators"],
+  "computers": ["SQL01", "FILES01", "BUILD01"],
+  "projects": ["backup-scripts", "cloud-migration"],
+  "lab_marker": "SWEETBERRY_CANARY_DECOY"
+}

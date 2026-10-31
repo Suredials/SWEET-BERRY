@@ -1,0 +1,17 @@
+[
+ {"actor":"10","action":"portscan","target_host":"dc01"},
+ {"actor":"20","action":"web_visit","target_host":"intranet01"},
+ {"actor":"30","action":"ssh_login","target_host":"backup01"},
+ {"actor":"10","action":"ldap_users","target_host":"dc01"},
+ {"actor":"20","action":"repo_discovery","target_host":"git01"},
+ {"actor":"30","action":"system_discovery","target_host":"backup01"},
+ {"actor":"10","action":"ldap_groups","target_host":"dc01"},
+ {"actor":"20","action":"repo_read","target_host":"git01"},
+ {"actor":"30","action":"file_discovery","target_host":"backup01"},
+ {"actor":"10","action":"enumerate_shares","target_host":"dc01"},
+ {"actor":"20","action":"cloud_buckets","target_host":"cloud01"},
+ {"actor":"30","action":"backup_access","target_host":"backup01"},
+ {"actor":"20","action":"cloud_inventory_read","target_host":"cloud01"},
+ {"actor":"30","action":"secret_access","target_host":"backup01"},
+ {"actor":"20","action":"secret_access","target_host":"cloud01"}
+]
