@@ -1,4 +1,10 @@
 /* A clear investigation canvas. Pixel lettering belongs to the logo only. */
+.page-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.new-test-copy{padding:22px 26px;max-width:650px;font-size:14px;line-height:1.9}.new-test-copy p{margin:0 0 18px}
+.new-test-status{padding:15px 18px;margin-bottom:20px;border:1px solid #76a447;background:#edf7e4;color:#426b26;font-size:13px;line-height:1.8;overflow-wrap:anywhere}
+html[data-theme=dark] .new-test-status{background:#293a24;border-color:#709544;color:#d3edb7}
+.new-test-status.test-error{border-color:#cf5b78;color:#d52c62;background:#fff0f5}html[data-theme=dark] .new-test-status.test-error{background:#492137;color:#ffc0d3}
+@media(max-width:650px){.page-heading{flex-wrap:wrap}.page-actions{width:100%;justify-content:flex-start}.page-heading .page-actions .button{width:auto;height:auto;font-size:12px;padding:10px}.new-test-copy{padding:18px;font-size:13px}}
 .overview-grid>.operator-panel{align-self:stretch;display:flex;flex-direction:column}
 .overview-grid>.operator-panel #operator-profile{flex:1;display:flex;flex-direction:column}
 .overview-grid>.operator-panel .operator-caveat{margin-top:auto}

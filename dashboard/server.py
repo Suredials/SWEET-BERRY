@@ -1,5 +1,6 @@
 """SOC frontend. Backend credentials stay server-side."""
 import os
+import json
 from pathlib import Path
 import time
 from dotenv import load_dotenv
@@ -100,3 +101,15 @@ def evidence(event_id:str):
 
 @app.get('/api/incidents')
 def incidents():return proxy('GET','/incidents')
+
+
+@app.post('/api/test-runs')
+def new_test():
+    return proxy('POST', '/test-runs', {})
+
+
+@app.get('/api/test-runs/status')
+def test_status():
+    status_file = ROOT / 'runtime/control/new-test.json'
+    status = json.loads(status_file.read_text(encoding='utf-8')) if status_file.exists() else {'state': 'idle'}
+    return {**status, 'available': Path('/etc/systemd/system/sweetberry-new-test.service').exists()}

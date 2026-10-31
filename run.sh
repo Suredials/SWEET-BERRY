@@ -24,6 +24,7 @@ if [ "${SWEETBERRY_OFFLINE:-false}" != true ]; then
   sudo docker compose up -d
   sudo sh ops/guard.sh
   sudo sh ops/install-services.sh
+  sudo sh ops/install-new-test.sh
   sudo sh ops/install-network-sensor.sh
 else
   SWEETBERRY_LIVE=false .venv/bin/python -m uvicorn app.api:from_environment --factory --host 127.0.0.1 --port 8000 > runtime/collector/api.log 2>&1 &

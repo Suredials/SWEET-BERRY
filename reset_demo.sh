@@ -10,7 +10,7 @@ systemctl stop sweetberry-api.service sweetberry-dashboard.service sweetberry-ch
 docker compose down --volumes
 archive="$root/runtime/archive/$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir -p "$archive"
-for name in collector cowrie dc portal forge cloud linux canary telemetry network pcap webedge chatbot broker; do
+for name in collector cowrie dc portal forge cloud linux canary telemetry network pcap webedge chatbot broker control; do
   if [ -d "$root/runtime/$name" ]; then
     mv "$root/runtime/$name" "$archive/$name"
   fi

@@ -840,6 +840,38 @@ de Compose **no son efectivos en ese kernel**. El límite por proceso no es
 una cuota global de RAM. Los contenedores comparten kernel y no proporcionan
 una frontera absoluta frente a vulnerabilidades del host.
 
+### Guardar y comenzar otra prueba sin recrear los objetivos
+
+El botón **Guardar y nueva prueba** abre una captura nueva y archiva la anterior.
+Confirma con **Guardar y comenzar**. El panel muestra el progreso, el tiempo
+real y la ruta del archivo guardado. También se puede ejecutar:
+
+```sh
+sh new_test.sh
+```
+
+El servicio `sweetberry-new-test` detiene brevemente los colectores y el broker,
+mueve `collector`, `telemetry`, `network` y `pcap` a una carpeta única bajo
+`runtime/archive/prueba-...`, y vuelve a iniciar los sensores y el API.
+El dashboard permanece disponible. Las sesiones, el riesgo y los informes de
+la nueva captura empiezan vacíos. Los puntos de lectura se colocan al final de
+los logs de origen para no volver a importar la prueba anterior. Se conserva
+el registro de canarios y el estado real del entorno.
+
+**Este modo conserva contenedores, archivos, señuelos expuestos y conexiones
+existentes.** Cierra las conexiones de la prueba anterior antes de comenzar
+otra. Para restaurar también los objetivos, utiliza `sh reset_demo.sh`.
+Los logs de origen que siguen montados en los servicios conservan su retención
+propia; el manifiesto identifica lo archivado. Esta operación rápida no es una
+imagen de todos los volúmenes ni del sistema operativo.
+
+El botón llama a una operación fija del host autenticada por el API. El modelo
+no tiene esa capacidad. Solo se instala en la Raspberry; el modo offline no
+ejecuta servicios del sistema. `ops/install-new-test.sh` instala la unidad,
+`ops/new_test.py` realiza el archivo y `dashboard/static/new-tests.js` muestra
+el progreso. Las pruebas comprueban preservación de evidencia, estado del
+entorno, canarios y límites entre capturas.
+
 ## 15. Replay y demostraciones
 
 | Escenario | Historia |

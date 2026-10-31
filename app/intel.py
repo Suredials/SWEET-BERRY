@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import threading
 import time
+from datetime import datetime
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = [
@@ -78,7 +79,7 @@ def local_intelligence(sessions):
             'techniques': sorted(techniques.values(), key=lambda x: x['count'], reverse=True)}
 
 
-def transcripts(root=ROOT):
+def transcripts(root=ROOT, since: float = 0):
     file = root / 'runtime/cowrie/log/cowrie/cowrie.json'
     if not file.exists():
         return []
@@ -93,6 +94,12 @@ def transcripts(root=ROOT):
                 try:
                     row = json.loads(line)
                     if row.get('eventid') == 'cowrie.command.input':
+                        if since:
+                            try:
+                                if datetime.fromisoformat(str(row.get('timestamp', '')).replace('Z', '+00:00')).timestamp() < since:
+                                    continue
+                            except ValueError:
+                                continue
                         output.append({'timestamp': row.get('timestamp'), 'session': row.get('session'),
                                        'source_ip': row.get('src_ip'), 'command': str(row.get('input', ''))[:4096]})
                 except ValueError:

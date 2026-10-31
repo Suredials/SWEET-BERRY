@@ -2,6 +2,9 @@ import asyncio
 from contextlib import asynccontextmanager
 import hmac
 import os
+import json
+import subprocess
+import time
 from pathlib import Path
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from .models import Event, ReplayRequest
@@ -21,6 +24,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def create_app(token: str | None = None, live: bool = False, engine=None):
+    capture_file = ROOT / 'runtime/collector/capture.json'
+    capture = json.loads(capture_file.read_text(encoding='utf-8')) if capture_file.exists() else {}
     secret = token or os.getenv('ADMIN_TOKEN', '')
     state = engine or Engine(ROOT / 'runtime/collector/events.jsonl', actor=apply_mutation if live else None)
     bus = EventBus(state)
@@ -96,7 +101,7 @@ def create_app(token: str | None = None, live: bool = False, engine=None):
     @app.get('/state', dependencies=[Depends(authorized)])
     def get_state():
         sessions = state.snapshot()
-        return {'sessions': sessions, 'environment': state.world, 'replay': dict(replay),
+        return {'sessions': sessions, 'environment': state.world, 'replay': dict(replay), 'capture': capture,
                 'assets': inventory.snapshot(), 'intelligence': local_intelligence(sessions), 'scenarios': CATALOG,
                 'observer': observer.snapshot(), 'soc_n2': analyst.snapshot(),
                 'telemetry': telemetry.snapshot(), 'coverage': {**reader.status,**coverage.snapshot()}, 'intel_v2': telemetry.intelligence()}
@@ -124,7 +129,23 @@ def create_app(token: str | None = None, live: bool = False, engine=None):
 
     @app.get('/transcripts', dependencies=[Depends(authorized)])
     def get_transcripts():
-        return transcripts() if live else []
+        return transcripts(since=capture.get('started', 0)) if live else []
+
+    @app.post('/test-runs', dependencies=[Depends(authorized)], status_code=202)
+    def new_test():
+        if not live:
+            raise HTTPException(403, 'Nueva captura disponible solo en la Raspberry activa')
+        if not Path('/etc/systemd/system/sweetberry-new-test.service').exists():
+            raise HTTPException(503, 'Servicio de nueva prueba no instalado')
+        active = subprocess.run(['systemctl', 'show', '-p', 'ActiveState', '--value', 'sweetberry-new-test.service'],
+                                capture_output=True, text=True, timeout=3).stdout.strip()
+        if active in {'active', 'activating', 'deactivating'}:
+            raise HTTPException(409, 'Ya hay una captura guardándose')
+        result = subprocess.run(['systemctl', 'start', '--no-block', 'sweetberry-new-test.service'],
+                                capture_output=True, timeout=3)
+        if result.returncode:
+            raise HTTPException(503, 'No se pudo iniciar el guardado')
+        return {'state': 'queued', 'accepted_at': time.time()}
 
     @app.get('/events', dependencies=[Depends(authorized)])
     def get_events():

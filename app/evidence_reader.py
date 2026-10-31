@@ -80,7 +80,9 @@ class EvidenceReader:
         self.status['files'][sensor]={'state':'reading','updated':time.time(),'offset':stream.tell() if not stream.closed else stat.st_size}
 
     def docker_logs(self,role):
-        since=str(time.time()-2)
+        capture_file=self.root/'runtime/collector/capture.json'
+        capture=json.loads(capture_file.read_text()) if capture_file.exists() else {}
+        since=str(max(time.time()-2,capture.get('started',0)))
         while not self.stop.is_set():
             process=None
             try:

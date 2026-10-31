@@ -5,7 +5,7 @@
   <script src="/static/theme.js"></script>
   <meta name="theme-color" content="#090918"><title>SweetBerry / Defensa adaptativa</title>
   <link rel="icon" type="image/png" href="/static/brand/favicon.png">
-  <link rel="stylesheet" href="/static/soc.css"><script src="/static/locale-es.js" defer></script><script src="/static/overview.js" defer></script><script src="/static/soc.js" defer></script><script src="/static/integrity.js" defer></script><script src="/static/analyst.js" defer></script><script src="/static/telemetry.js" defer></script><script src="/static/profile.js" defer></script>
+  <link rel="stylesheet" href="/static/soc.css"><script src="/static/locale-es.js" defer></script><script src="/static/overview.js" defer></script><script src="/static/soc.js" defer></script><script src="/static/integrity.js" defer></script><script src="/static/analyst.js" defer></script><script src="/static/telemetry.js" defer></script><script src="/static/profile.js" defer></script><script src="/static/new-tests.js" defer></script>
   <link rel="stylesheet" href="/static/brand.css"><link rel="stylesheet" href="/static/operations.css"><link rel="stylesheet" href="/static/dark.css">
 </head>
 <body>
@@ -32,7 +32,8 @@
 <div class="main-shell">
   <header class="topbar"><div><span class="breadcrumb">Operations</span><span class="slash">/</span><span id="page-label">Overview</span></div><div class="topbar-right"><button id="theme-toggle" class="button theme-toggle" type="button" aria-label="Switch color theme"></button><span class="connection" id="connection"><i></i>CONNECTING</span><span class="clock" id="clock">--:--:--</span><span class="avatar">OP</span></div></header>
   <main>
-    <div class="page-heading"><div><div class="eyebrow">ADAPTIVE DECEPTION PLATFORM</div><h1 id="page-title">Operator activity<span class="title-dot">.</span></h1><p id="page-description">Follow the interaction. Inspect the evidence. Understand the defensive response.</p></div><button class="button secondary" id="export"><span data-icon="download"></span>Export evidence</button></div>
+    <div class="page-heading"><div><div class="eyebrow">ADAPTIVE DECEPTION PLATFORM</div><h1 id="page-title">Operator activity<span class="title-dot">.</span></h1><p id="page-description">Follow the interaction. Inspect the evidence. Understand the defensive response.</p></div><div class="page-actions"><button class="button primary" id="new-test-button" type="button">Guardar y nueva prueba</button><button class="button secondary" id="export"><span data-icon="download"></span>Export evidence</button></div></div>
+    <div id="new-test-status" class="new-test-status hidden" role="status" aria-live="polite"></div>
     <div class="controlbar"><div class="scope-switch" role="group" aria-label="Data scope"><button data-scope="live" class="selected"><i class="tiny-dot"></i>Live telemetry</button><button data-scope="replay">Replay</button><button data-scope="all">All activity</button></div><div class="control-right"><span class="micro-label">SESSION</span><select id="session-select" aria-label="Session"><option value="all">All sources</option></select><span class="refresh-label"><span class="refresh-ring"></span>Auto refresh · 1.5s</span></div></div>
     <div id="replay-progress" class="replay-progress hidden"><span class="pill purple">REPLAY</span><span id="replay-name"></span><div class="progress-track"><i id="replay-bar"></i></div><span id="replay-step" class="mono"></span><button id="stop-replay" class="text-button">Stop / clear</button></div>
     <section id="view-overview" class="view active">
@@ -67,4 +68,5 @@
 </div>
 <div id="toasts" class="toasts" aria-live="polite"></div>
 <dialog id="detail-dialog"><div class="dialog-header"><div><span class="panel-kicker">OBSERVATION DETAIL</span><h2 id="detail-title"></h2></div><button id="close-detail" class="text-button">Close ✕</button></div><div id="detail-body"></div></dialog>
+<dialog id="new-test-dialog"><div class="dialog-header"><h2>Guardar y nueva prueba</h2><button id="cancel-new-test" class="text-button" type="button">Cerrar</button></div><div class="new-test-copy"><p>Archiva eventos, informes, evidencias y capturas de red. Después abre una captura con sesiones y riesgo en cero.</p><p><strong>Modo rápido: conserva los contenedores, los archivos, los señuelos expuestos y las conexiones existentes.</strong> Cierra las conexiones de la prueba anterior antes de comenzar la siguiente.</p><p>Para restaurar también los objetivos, usa <code>sh reset_demo.sh</code>.</p><button class="button primary" id="confirm-new-test" type="button">Guardar y comenzar</button></div></dialog>
 </body></html>
