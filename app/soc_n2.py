@@ -42,6 +42,24 @@ class Report(BaseModel):
     operator_assessment:OperatorAssessment | None = None
 
 
+def material_features(session: dict, context: list[dict]) -> set[str]:
+    """Ignore timestamps, repeated requests, routine flows and model annotations."""
+    facts = {(e.get('action'), e.get('target_host'), e.get('mitre'), e.get('evidence'), bool(e.get('firewall', {}).get('blocked')))
+             for e in session.get('events', []) if e.get('mitre') or e.get('firewall', {}).get('blocked') or e.get('base_risk', e.get('risk', 0)) > 0}
+    extra = {tuple(str(e.get(k, '')) for k in ('action', 'host', 'destination', 'port', 'canary_id', 'executable_family', 'file_scope', 'outcome'))
+             for e in context if e.get('action') in {'process_exec', 'network_connect', 'sensitive_path_open', 'chat_guard_decision'} or e.get('canary_id')}
+    if not facts and not extra:
+        return set()
+    values = [('event', *fact) for fact in facts] + [('context', *fact) for fact in extra]
+    values.append(('operator_style', session.get('profile', {}).get('likely_type')))
+    return {hashlib.sha256(json.dumps(value).encode()).hexdigest() for value in values}
+
+
+def material_signature(session: dict, context: list[dict]) -> str:
+    features = material_features(session, context)
+    return hashlib.sha256(json.dumps([session.get('source_ip'), sorted(features)]).encode()).hexdigest() if features else ''
+
+
 def evidence_bundle(sessions: dict, observations: dict) -> dict:
     """Allowlisted fields only. No commands, attacker strings, credentials, or argv."""
     events = []
@@ -120,6 +138,28 @@ class SocAnalyst:
                     self.reports = [json.loads(line) for line in stream][-10:]
             except (OSError, ValueError):
                 pass
+        def setting(name, default, low, high):
+            try: return max(low, min(high, int(os.getenv(name, str(default)))))
+            except ValueError: return default
+        self.min_interval = setting('SOC_MIN_ANALYSIS_INTERVAL', 120, 15, 3600)
+        self.max_calls = setting('SOC_MAX_CALLS_PER_CAPTURE', 6, 0, 100)
+        self.budget_file = root / 'runtime/collector/soc_budget.json'
+        try: budget = json.loads(self.budget_file.read_text()) if self.budget_file.exists() else {}
+        except (OSError, ValueError): budget = {}
+        self.provider_calls = int(budget.get('calls', sum(r['mode']=='live' or bool(r.get('provider_error')) for r in self.reports)))
+        self.last_provider_attempt = float(budget.get('last_attempt', 0))
+        self.source_digests.update(budget.get('source_digests', {}))
+        self.source_features = {source: set(values) for source, values in budget.get('source_features', {}).items()}
+        self.status.update(provider_calls=self.provider_calls, max_calls_per_capture=self.max_calls,
+                           min_interval_seconds=self.min_interval, max_output_tokens=1536)
+
+    def save_budget(self):
+        self.budget_file.parent.mkdir(parents=True, exist_ok=True)
+        temporary = self.budget_file.with_suffix('.tmp')
+        temporary.write_text(json.dumps({'calls': self.provider_calls, 'last_attempt': self.last_provider_attempt,
+                                         'source_digests': self.source_digests,
+                                         'source_features': {s: sorted(v) for s,v in self.source_features.items()}}), encoding='utf-8')
+        temporary.replace(self.budget_file)
 
     def snapshot(self):
         with self.lock:
@@ -207,7 +247,7 @@ class SocAnalyst:
         response = requests.post('https://api.primalabs.ai/v1/chat/completions',
                                  headers={'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json'},
                                  json={'model': self.status['model'], 'messages': [{'role': 'system', 'content': instruction},
-                                       {'role': 'user', 'content': content}], 'temperature': 0.2, 'max_tokens': 4096,
+                                       {'role': 'user', 'content': content}], 'temperature': 0.2, 'max_tokens': 1536,
                                        'stream': False, 'response_format': {'type': 'json_object'}},
                                  timeout=(6, 40))
         if response.status_code != 200:
@@ -238,22 +278,35 @@ class SocAnalyst:
                 selected=None
                 for sid,session in candidates:
                     bundle=evidence_bundle({sid:session},{'events':[],'limitations':self.observer.snapshot()['limitations']})
-                    bundle['events']+=self.read_context(session['source_ip'])
-                    candidate_digest=hashlib.sha256(json.dumps(bundle,sort_keys=True).encode()).hexdigest()
-                    if candidate_digest!=self.source_digests.get(session['source_ip']) or self.wake.is_set():
-                        selected=(session['source_ip'],bundle,candidate_digest)
+                    context=self.read_context(session['source_ip'])
+                    bundle['events']=bundle['events'][-14:]+context[:10]
+                    candidate_digest=material_signature(session,context)
+                    features=material_features(session,context)
+                    if features-self.source_features.get(session['source_ip'],set()) or self.wake.is_set():
+                        selected=(session['source_ip'],bundle,candidate_digest,features)
                         break
                 if not selected:
                     self.stop.wait(5)
                     continue
-                source,bundle,digest=selected
+                source,bundle,digest,features=selected
                 requested = self.wake.is_set()
+                if self.status['mode']=='live':
+                    if self.provider_calls>=self.max_calls:
+                        self.status.update(state='budget_exhausted',error='Límite de consultas de esta captura alcanzado')
+                        self.wake.clear();self.stop.wait(10);continue
+                    if not requested and time.time()-self.last_provider_attempt<self.min_interval:
+                        self.status.update(state='cooldown');self.stop.wait(5);continue
                 self.wake.clear()
                 if bundle['events'] and (digest != self.last_digest or requested):
                     self.status.update(state='analyzing', last_attempt=time.time(), error='')
                     if getattr(self,'telemetry',None):self.telemetry.record({'sensor':'soc-n2','asset':'collector','kind':'soc_analysis_started',
                         'source_ip':'local','incident_source':source,'evidence_count':len(bundle['events']),'trust':'host-control'})
                     try:
+                        if self.status['mode']=='live':
+                            self.provider_calls+=1
+                            self.last_provider_attempt=time.time()
+                            self.status['provider_calls']=self.provider_calls
+                            self.save_budget()
                         report, mode = self.analyze(bundle)
                         self.status['state'] = 'published' if mode == 'live' else 'mock'
                     except Exception as exc:
@@ -263,6 +316,8 @@ class SocAnalyst:
                     self.publish(report, bundle, mode)
                     self.last_digest = digest
                     self.source_digests[source]=digest
+                    self.source_features.setdefault(source,set()).update(features)
+                    self.save_budget()
             except Exception as exc:
                 self.status.update(state='error', error=type(exc).__name__)
             # A request wakes the worker; calls remain serialized and rate-limited.

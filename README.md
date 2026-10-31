@@ -604,6 +604,18 @@ Replay no se presenta al analista como si fuera evidencia de acciones live.
 
 ## 10. Chatbot y LLM Guard
 
+El analista SOC N2 evita repetir análisis por cambios de hora, nuevos identificadores
+de log, flujos rutinarios o anotaciones del propio modelo. Solo los hechos de
+seguridad no revisados justifican otro análisis automático. Por defecto se limita
+a seis intentos de consulta por captura, separados al menos 120 segundos. El
+contador persiste incluso si se reinicia el API; una nueva captura abre otro
+presupuesto. El botón de análisis manual puede adelantar el intervalo, pero no
+superar el límite de consultas. Se envían como máximo 24 resúmenes de evidencia y
+se limita la salida a 1.536 tokens. La captura y la detección siguen funcionando
+al agotar el presupuesto. `SOC_MAX_CALLS_PER_CAPTURE` y
+`SOC_MIN_ANALYSIS_INTERVAL` permiten ajustar estos límites. Este presupuesto
+corresponde al analista SOC; el chatbot mantiene sus propios límites por turno.
+
 Es una superficie distinta del analista SOC N2. El gateway público conoce un
 token limitado de broker, no la clave Primalabs ni el token administrativo.
 El broker valida token y origen esperado de la red privada.

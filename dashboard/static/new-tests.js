@@ -26,10 +26,22 @@ async function checkNewTest(){
    newTestBusy=false;testButton.disabled=false;
    if(status.state==='error'){testMessage('No se completó el guardado. Revisa sudo journalctl -u sweetberry-new-test. '+(status.error||''),true);return;}
    testMessage('Nueva prueba lista en '+status.elapsed_seconds+' s. Evidencia guardada en '+status.archive+'. Objetivos y señuelos conservados.');
-   selected='all';scope='live';lastRenderStamp='';lastEvidence=[];operatorStamp='';analystStamp='';lastTelemetryStamp='';indexedRows=[];
-   document.querySelectorAll('[data-scope]').forEach(b=>b.classList.toggle('selected',b.dataset.scope==='live'));
    await poll(true);
   }
  }catch{}finally{setTimeout(checkNewTest,1000);}
 }
 checkNewTest();
+
+function clearCapturePresentation(){
+ captureEpoch++;
+ document.querySelectorAll('dialog[open]').forEach(node=>node.close());document.getElementById('detail-body').innerHTML='';
+ selected='all';scope='live';lastRenderStamp='';lastEvidence=[];operatorStamp='';analystStamp='';observerStamp='';lastTelemetryStamp='';lastIntegrityHash='';indexedRows=[];chatRows=[];traceCursor='';previousSignals=null;replayHash='';
+ for(const id of ['source-intel','observable-table','mitre-grid','event-explorer','event-feed','attack-paths','observer-events','file-changes','terminal','indexed-events','process-tree','case-cards','analyst-reports','chat-turns','operator-profile','soc-n2-preview']){
+  const node=document.getElementById(id);if(node)node.innerHTML='<div class="table-empty">Nueva captura: sin resultados de la prueba anterior.</div>';
+ }
+ for(const id of traceIds){const node=document.getElementById(id);if(node)node.value='';}
+ document.getElementById('event-search').value='';document.getElementById('trace-routine').checked=false;
+ document.querySelectorAll('[data-scope]').forEach(b=>b.classList.toggle('selected',b.dataset.scope==='live'));
+ updateTelemetryPanels();
+ if(view==='telemetry')loadTelemetry();if(view==='evidence')loadEvidence();if(view==='chatdefense')loadChat();
+}

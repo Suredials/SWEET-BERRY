@@ -1,4 +1,5 @@
 /* A clear investigation canvas. Pixel lettering belongs to the logo only. */
+body #session-select{width:208px;min-width:208px;max-width:208px;box-sizing:border-box}
 body .page-heading .page-actions .button{width:208px;min-height:44px;height:44px;padding:10px 15px;font-size:13px;font-weight:600;line-height:20px;border-width:1px;box-sizing:border-box}
 .page-heading .page-actions .button.primary,.page-heading .page-actions .button.secondary{box-shadow:0 2px 0 #0002}
 .overview-grid>.intent-panel,.overview-grid>.topology-panel{align-self:stretch;display:flex;flex-direction:column}

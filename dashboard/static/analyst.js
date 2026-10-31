@@ -16,7 +16,7 @@ setInterval(() => {
     const sources=new Set(scopedSessions().map(s=>s.source_ip));
     const latest=[...analyst.reports].reverse().find(r=>r.evidence?.some(e=>sources.has(e.source_ip)));
     $('soc-n2-preview').innerHTML = scope === 'replay' ? '' : latest ? `<div class="divider"></div><div class="section-label">SOC N2 / ${escapeHTML(latest.mode.toUpperCase())}</div><div class="assessment-note"><b>${escapeHTML(latest.title)}</b><p>${escapeHTML(latest.summary.slice(0,280))}${latest.summary.length>280?'...':''}</p><button class="text-button" data-go="analyst">Read analyst report</button></div>` : '<div class="assessment-note">SOC N2 awaiting live evidence.</div>';
-    $('analyst-status').textContent = `${status.provider || 'local'} / ${status.model || 'unconfigured'} · ${status.mode || 'mock'} · ${status.state || 'waiting'}${status.error ? ' · ' + status.error : ''} · Publishes validated reports only. Live telemetry, no replay fixtures.`;
+    $('analyst-status').textContent = `${status.provider || 'local'} / ${status.model || 'unconfigured'} · ${status.mode || 'mock'} · ${status.state || 'waiting'} / ${status.provider_calls||0} de ${status.max_calls_per_capture??6} consultas / intervalo ${status.min_interval_seconds||120}s${status.error ? ' · ' + status.error : ''} · Publishes validated reports only. Live telemetry, no replay fixtures.`;
     $('analyst-reports').innerHTML = analyst.reports.length ? [...analyst.reports].reverse().map((report,index) => `
       ${index ? `<details class="analyst-history"><summary>${escapeHTML(time(report.timestamp))} / ${escapeHTML(report.title)} / ${escapeHTML(report.mode.toUpperCase())}</summary>` : ''}
       <article class="analyst-report">
