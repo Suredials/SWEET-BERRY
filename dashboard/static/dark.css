@@ -19,7 +19,7 @@ html[data-theme=dark] .mission-summary[data-mode=replay]{background:linear-gradi
 html[data-theme=dark] .mission-summary[data-mode=all]{border-left-color:#f3c273}
 html[data-theme=dark] .mission-kicker{color:#ff9fc0}html[data-theme=dark] .mission-copy h2{color:#fff0f8}html[data-theme=dark] .mission-copy p{color:#efd1ec}html[data-theme=dark] .mission-summary .mission-copy small{color:#d9afdb}
 html[data-theme=dark] .platform-status{color:#ceb2dc}html[data-theme=dark] .platform-status .platform-label{color:#b58ac7}html[data-theme=dark] .platform-status .icon{color:#d49ce8}.health-light.ok{background:#a3e346}
-html[data-theme=dark] .metric{border-color:#563660;box-shadow:0 3px 12px #09030f26}
+html[data-theme=dark] .metric{--metric-color:#d19bff;background:linear-gradient(140deg,#382447,#261a34);border-color:#765088;box-shadow:0 3px 12px #09030f26}
 html[data-theme=dark] .metric-blue{--metric-color:#8ecbff;background:linear-gradient(140deg,#243048,#211a31)}
 html[data-theme=dark] .metric-purple{--metric-color:#d19bff;background:linear-gradient(140deg,#3a2350,#271a36)}
 html[data-theme=dark] .metric-raspberry{--metric-color:#ff8eb0;background:linear-gradient(140deg,#492039,#2e172b)}
@@ -46,3 +46,8 @@ html[data-theme=dark] .evidence-notice,html[data-theme=dark] .intel-notice{backg
 html[data-theme=dark] dialog{background:#2c1b3a;color:#f3dbfb;border-color:#9c5eb4}html[data-theme=dark] .dialog-header{border-color:#674277}html[data-theme=dark] .detail-grid label{color:#c28cd4}html[data-theme=dark] .detail-value{color:#eacdf6}html[data-theme=dark] .toast{background:#462450;color:#ffe4f6;border-color:#a65191;box-shadow:0 7px 30px #08030e77}
 html[data-theme=dark] .replay-intro h2{color:#f3d5ff}html[data-theme=dark] .replay-intro p{color:#d0a5e1}html[data-theme=dark] .replay-progress{background:#40204d;border-color:#9e5fba;color:#e3b9f6}html[data-theme=dark] .path-node{background:#3a2449;border-color:#8c52a5}html[data-theme=dark] .path-node b{color:#f2d0fe}html[data-theme=dark] .path-node span{color:#cfa5e0}html[data-theme=dark] .path-session-header{color:#e4bdf5}html[data-theme=dark] .path-arrow{color:#d08be8}
 @media(max-width:650px){.theme-toggle{width:32px;height:32px;padding:6px}.theme-toggle span{display:none}body .page-heading h1{font-size:27px}}
+html[data-theme=dark] #view-telemetry .coverage-card{background:linear-gradient(125deg,#35213f,#291b38);border-color:#78538a;color:#e4c8f1}
+html[data-theme=dark] #view-telemetry .coverage-card b{color:#f6e6ff}
+html[data-theme=dark] #view-telemetry .process-tree ul{border-color:#9361a6}
+html[data-theme=dark] #view-telemetry .telemetry-filters{background:#2b1b39;border-bottom:1px solid #654273}
+html[data-theme=dark] #view-telemetry .metric-value{color:var(--metric-color,#deb3ff)}
