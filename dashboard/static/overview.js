@@ -1,6 +1,6 @@
 /* Overview: explain observations, their support and the defensive response. */
 const overviewTargets=[['dc01','Domain controller','AD / LDAP / SMB','#e42c68'],['backup01','Linux backup','Recorded SSH','#8952cf'],['intranet01','Employee portal','Documents','#347fbd'],['git01','Engineering Git','Gitea','#c057ac'],['cloud01','Cloud account','Moto / S3 / IAM','#5b9727'],['services01','Service decoys','OpenCanary','#d99525'],['assistant01','AI assistant','Guarded chatbot','#4574cc'],['support01','Support portal','Monitored upload','#e56837']];
-const overviewFormat=new Intl.NumberFormat('en',{notation:'compact',maximumFractionDigits:1});
+const overviewFormat=new Intl.NumberFormat('es-BO',{notation:'compact',maximumFractionDigits:1});
 function overviewExternal(s){return !/^(172\.30\.|127\.|::1$|local$|unattributed$)/.test(s.source_ip||'');}
 function overviewGroups(events){
  const groups=[{name:'Service contact',detail:'Initial and uncategorized contacts',color:'#4e83c7',count:0},{name:'Discovery',detail:'Users, hosts, shares and directories',color:'#8a4cc9',count:0},{name:'Access & execution',detail:'Authentication, uploads and execution signals',color:'#e72a64',count:0},{name:'Data & credentials',detail:'Repository, object and credential-related activity',color:'#af5e29',count:0},{name:'Input quarantined',detail:'Untrusted instructions blocked',color:'#4c8a22',count:0}];

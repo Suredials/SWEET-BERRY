@@ -29,7 +29,7 @@ with sync_playwright() as playwright:
     page.route('**/*', local_only)
     page.on('pageerror', lambda error: (errors.append(str(error)), print('BROWSER_ERROR', str(error))))
     page.goto(base, wait_until='networkidle')
-    page.locator('#connection').filter(has_text=re.compile('CONNECTED|OFFLINE / MOCK')).wait_for()
+    page.locator('#connection').filter(has_text=re.compile('CONNECTED|OFFLINE / MOCK|CONECTADO|SIN CONEXI')).wait_for()
     page.locator('#operator-profile .operator-head').wait_for()
     page.screenshot(path=str(output / 'soc-overview.png'), full_page=True)
     for name in ('incidents', 'paths', 'assets', 'intel', 'evidence', 'telemetry', 'chatdefense', 'analyst', 'replays'):
