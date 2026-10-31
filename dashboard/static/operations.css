@@ -1,4 +1,7 @@
 /* A clear investigation canvas. Pixel lettering belongs to the logo only. */
+.overview-grid>.operator-panel{align-self:stretch;display:flex;flex-direction:column}
+.overview-grid>.operator-panel #operator-profile{flex:1;display:flex;flex-direction:column}
+.overview-grid>.operator-panel .operator-caveat{margin-top:auto}
 body .page-heading h1{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:650;letter-spacing:-1px;font-size:32px}
 .sidebar{color:#f3edf9;overflow-y:auto;scrollbar-width:thin}.sidebar .workspace{color:#f3edf9}
 .mission-summary .mission-copy small,.metrics .metric-note,.panel .chart-explainer,.journey-chart .journey-stage p,.panel .evidence-strength>p{color:#796483}
