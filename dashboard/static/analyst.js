@@ -9,11 +9,12 @@ document.getElementById('analyze-now').addEventListener('click', async () => {
 setInterval(() => {
   if (!data) return;
   const analyst = data.soc_n2 || {status:{},reports:[]};
-  const stamp = JSON.stringify([analyst,scope]);
+  const stamp = JSON.stringify([analyst,scope,selected]);
   if (stamp !== analystStamp) {
     analystStamp = stamp;
     const status = analyst.status;
-    const latest = analyst.reports.at(-1);
+    const sources=new Set(scopedSessions().map(s=>s.source_ip));
+    const latest=[...analyst.reports].reverse().find(r=>r.evidence?.some(e=>sources.has(e.source_ip)));
     $('soc-n2-preview').innerHTML = scope === 'replay' ? '' : latest ? `<div class="divider"></div><div class="section-label">SOC N2 / ${escapeHTML(latest.mode.toUpperCase())}</div><div class="assessment-note"><b>${escapeHTML(latest.title)}</b><p>${escapeHTML(latest.summary.slice(0,280))}${latest.summary.length>280?'...':''}</p><button class="text-button" data-go="analyst">Read analyst report</button></div>` : '<div class="assessment-note">SOC N2 awaiting live evidence.</div>';
     $('analyst-status').textContent = `${status.provider || 'local'} / ${status.model || 'unconfigured'} · ${status.mode || 'mock'} · ${status.state || 'waiting'}${status.error ? ' · ' + status.error : ''} · Publishes validated reports only. Live telemetry, no replay fixtures.`;
     $('analyst-reports').innerHTML = analyst.reports.length ? [...analyst.reports].reverse().map((report,index) => `

@@ -344,7 +344,7 @@ flowchart LR
     A[SSH .20:22] --> B[Cowrie: sesión]
     B --> C[Shell analyst en backup01]
     C --> D[Identidad / host / procesos / red]
-    D --> E[/srv/corp / Backups]
+    D --> E["/srv/corp / Backups"]
     E --> F[Inventario / referencias Git-cloud]
 ```
 

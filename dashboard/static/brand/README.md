@@ -7,7 +7,7 @@ same transparent mark.
 
 The dashboard uses a dark navy background, raspberry accents, violet structure
 and lime status indicators. Pixel typography is restricted to the product name
-and page headings; evidence, reports and tables retain reading fonts.
+only; page headings, evidence, reports and tables retain reading fonts.
 
 Silkscreen is by The Silkscreen Project Authors, distributed under the SIL Open
 Font License 1.1. See [SILKSCREEN-OFL.txt](SILKSCREEN-OFL.txt) and the
