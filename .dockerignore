@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+!.env.example
+.venv
+runtime
+vendor
+__pycache__
+.pytest_cache
+*.pem
+*.key
+*.pcap
+*.pcapng
+*.sqlite*
+*.log

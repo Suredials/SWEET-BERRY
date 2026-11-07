@@ -1159,3 +1159,19 @@ publicarlo no sustituye esa decisión ni concede una licencia abierta concreta.
 
 La guía operativa inglesa de la primera versión funcional se conserva en
 [docs/OPERATIONS-0.4.md](docs/OPERATIONS-0.4.md).
+
+### Demo aislada con Docker
+
+Para construir la interfaz y el colector en modo mock/replay, sin sensores ni
+servicios del laboratorio, ejecuta:
+
+```sh
+docker build -t sweetberry-demo .
+docker run --rm -p 127.0.0.1:8501:8501 sweetberry-demo
+```
+
+Abre `http://127.0.0.1:8501`. La configuración se genera dentro del contenedor;
+los datos de esta demo son efímeros. Para construir los servicios del laboratorio
+completo usa `sudo docker compose build` y sigue las instrucciones de instalación
+anteriores: necesita preparación de red, configuración y servicios en el host.
+Nunca incluyas `.env` ni datos de `runtime/` en la imagen o el repositorio.
